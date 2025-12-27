@@ -1,0 +1,6 @@
+{
+  "name": "sandboxed-code-official",
+  "version": "1.0.0",
+  "description": "Official plugins for Sandboxed Code CLI (SCC)",
+  "plugins": ["scc-safety-net"]
+}

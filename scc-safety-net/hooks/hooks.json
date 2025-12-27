@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/scc_safety_net.py"
+      }]
+    }]
+  }
+}
