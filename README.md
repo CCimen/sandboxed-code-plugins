@@ -85,12 +85,20 @@ Or install via CLI:
 
 ```mermaid
 flowchart TB
-    subgraph SCC["Container Isolation (SCC)"]
-        subgraph Plugin["Behavioral Guardrails (Plugin)"]
+    subgraph SCC ["SCC Container Isolation"]
+        direction TB
+        subgraph Plugin ["Plugin Guardrails"]
             AI["AI Code Execution"]
         end
-        Blocks["Blocks: git push --force, reset --hard"]
     end
+
+    subgraph Blocked ["Blocked Commands"]
+        direction TB
+        FP["git push --force"]
+        RH["git reset --hard"]
+    end
+
+    Plugin -.->|blocks| Blocked
 ```
 
 **SCC provides**: Container isolation, org-level config, policy management
