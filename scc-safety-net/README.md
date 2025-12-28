@@ -4,6 +4,8 @@ A Claude Code plugin that blocks destructive git commands before they execute. P
 
 Part of the [SCC (Sandboxed Code CLI)](https://github.com/CCimen/scc) ecosystem.
 
+> **Part of [Sandboxed Code Plugins](https://github.com/CCimen/sandboxed-code-plugins)** - the official plugin marketplace for Claude Code
+
 ## What Gets Blocked
 
 | Command | Risk | Use Instead |
@@ -83,13 +85,12 @@ Policy is loaded from (first found wins):
 3. `~/.cache/scc/org_config.json`
 4. Built-in defaults (block mode)
 
-### SCC Org Config Example
+### SCC Org Config Examples
 
-Configure per-team policies in your SCC org config:
+#### Minimal Example (Quick Enable)
 
 ```json
 {
-  "name": "my-organization",
   "marketplaces": {
     "sandboxed-code-official": {
       "source": "github",
@@ -97,24 +98,51 @@ Configure per-team policies in your SCC org config:
       "repo": "sandboxed-code-plugins"
     }
   },
-  "teams": {
-    "engineering": {
-      "plugins": ["scc-safety-net@sandboxed-code-official"],
-      "security": {
-        "safety_net": {
-          "action": "block",
-          "block_force_push": true,
-          "block_reset_hard": true,
-          "block_branch_force_delete": true,
-          "block_checkout_restore": true,
-          "block_clean": true,
-          "block_stash_destructive": true
-        }
-      }
+  "defaults": {
+    "enabled_plugins": ["scc-safety-net@sandboxed-code-official"]
+  }
+}
+```
+
+#### Full Example (With Policy Configuration)
+
+```json
+{
+  "organization": {
+    "name": "my-organization"
+  },
+  "marketplaces": {
+    "sandboxed-code-official": {
+      "source": "github",
+      "owner": "CCimen",
+      "repo": "sandboxed-code-plugins"
+    }
+  },
+  "security": {
+    "safety_net": {
+      "action": "block",
+      "block_force_push": true,
+      "block_reset_hard": true,
+      "block_branch_force_delete": true,
+      "block_checkout_restore": true,
+      "block_clean": true,
+      "block_stash_destructive": true
+    }
+  },
+  "defaults": {
+    "enabled_plugins": ["scc-safety-net@sandboxed-code-official"]
+  },
+  "profiles": {
+    "devops": {
+      "additional_plugins": ["some-devops-plugin@internal-marketplace"]
     }
   }
 }
 ```
+
+> **Policy Scope Note:**
+> - **In SCC mode:** `SCC_POLICY_PATH` is set by SCC, so org policy takes precedence. Teams/projects cannot override.
+> - **Standalone mode:** Workspace policy (`./.scc/effective_policy.json`) can override because no SCC environment variable is set.
 
 ### Action Modes
 
