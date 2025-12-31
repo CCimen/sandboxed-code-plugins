@@ -1,6 +1,21 @@
 {
+  "$schema": "https://cdn.jsdelivr.net/npm/@anthropic-ai/claude-code@latest/schemas/marketplace.schema.json",
   "name": "sandboxed-code-official",
   "version": "1.0.0",
   "description": "Official plugins for Sandboxed Code CLI (SCC)",
-  "plugins": ["scc-safety-net"]
+  "owner": {
+    "name": "SCC Team"
+  },
+  "plugins": [
+    {
+      "name": "scc-safety-net",
+      "description": "Protect remote git history in SCC sandboxes",
+      "source": "./scc-safety-net",
+      "category": "security",
+      "version": "0.1.0",
+      "author": {
+        "name": "SCC Team"
+      }
+    }
+  ]
 }

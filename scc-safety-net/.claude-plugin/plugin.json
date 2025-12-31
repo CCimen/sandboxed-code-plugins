@@ -2,7 +2,17 @@
   "name": "scc-safety-net",
   "version": "0.1.0",
   "description": "Protect remote git history in SCC sandboxes",
-  "author": {"name": "SCC Team"},
+  "author": {
+    "name": "SCC Team"
+  },
   "repository": "https://github.com/CCimen/sandboxed-code-plugins",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "scc",
+    "sandbox",
+    "safety",
+    "git",
+    "protection",
+    "security"
+  ]
 }
