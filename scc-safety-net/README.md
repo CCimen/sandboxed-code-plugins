@@ -12,7 +12,11 @@ Part of the [SCC (Sandboxed Code CLI)](https://github.com/CCimen/scc) ecosystem.
 |---------|------|-------------|
 | `git push --force` | Overwrites remote history | `git push --force-with-lease` |
 | `git push +main` | Force push via refspec | `git push --force-with-lease` |
+| `git push --mirror` | Overwrites entire remote | `git push` (regular) |
 | `git reset --hard` | Destroys uncommitted changes | `git stash` |
+| `git reflog expire --expire-unreachable=now` | Destroys recovery history | Don't expire manually |
+| `git gc --prune=now` | Immediately deletes objects | `git gc` (default prune) |
+| `git filter-branch` | Rewrites history destructively | `git filter-repo` |
 | `git branch -D` | Deletes without merge check | `git branch -d` |
 | `git stash drop/clear` | Permanently loses stashed work | Review first |
 | `git clean -f` | Deletes untracked files | `git clean -n` (dry-run) |
@@ -176,7 +180,7 @@ uv run ruff check --fix scripts/ tests/
 uv run ruff format scripts/ tests/
 ```
 
-201 tests cover git rules, shell parsing, policy loading, and end-to-end hook behavior.
+258 tests cover git rules, shell parsing, policy loading, secret redaction, and end-to-end hook behavior.
 
 ## Related
 
