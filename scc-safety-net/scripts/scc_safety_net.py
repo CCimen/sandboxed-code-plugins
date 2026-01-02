@@ -28,6 +28,7 @@ from typing import Any
 
 from scc_safety_impl.hook import analyze_command, get_exit_code
 from scc_safety_impl.policy import load_policy, render_status, render_status_json
+from scc_safety_impl.redact import safe_output
 
 
 def handle_status(*, json_output: bool = False) -> int:
@@ -37,16 +38,17 @@ def handle_status(*, json_output: bool = False) -> int:
         json_output: If True, output JSON instead of human-readable format
 
     Returns:
-        Exit code (always 0 for status)
+        Exit code (0 for success, 1 if policy warning exists)
     """
-    policy = load_policy()
+    policy, warning = load_policy()
 
     if json_output:
-        print(render_status_json(policy))
+        print(render_status_json(policy, warning))
     else:
-        print(render_status(policy))
+        print(render_status(policy, warning))
 
-    return 0
+    # Exit 1 if there's a policy integrity warning (SCC-managed mode)
+    return 1 if warning else 0
 
 
 def handle_hook(data: dict[str, Any]) -> int:
@@ -79,9 +81,19 @@ def handle_hook(data: dict[str, Any]) -> int:
     reason = analyze_command(command, cwd=cwd)
 
     if reason:
+        exit_code = get_exit_code(reason)
+
+        # If blocking (exit code 2), check for policy integrity warnings
+        # Only append warning when actually blocking (not for warnings)
+        if exit_code == 2:
+            _policy, policy_warning = load_policy()
+            if policy_warning:
+                reason = f"{reason}\n\nNote: {policy_warning}; using safe defaults."
+
         # Output reason to stderr (Claude receives this)
-        print(reason, file=sys.stderr)
-        return get_exit_code(reason)
+        # Use safe_output to redact any secrets and truncate long output
+        print(safe_output(reason), file=sys.stderr)
+        return exit_code
 
     return 0
 
@@ -106,11 +118,12 @@ def main() -> int:
         data = json.load(sys.stdin)
     except json.JSONDecodeError as e:
         # Invalid JSON, allow execution but warn
-        print(f"scc-safety-net: Invalid JSON input: {e}", file=sys.stderr)
+        # Use safe_output to prevent leaking secrets from malformed input
+        print(safe_output(f"scc-safety-net: Invalid JSON input: {e}"), file=sys.stderr)
         return 0
     except Exception as e:
         # Unexpected error, allow execution but warn
-        print(f"scc-safety-net: Error reading input: {e}", file=sys.stderr)
+        print(safe_output(f"scc-safety-net: Error reading input: {e}"), file=sys.stderr)
         return 0
 
     return handle_hook(data)
