@@ -3,14 +3,18 @@
 This module analyzes git commands and returns block reasons for
 destructive operations that could damage remote history or local work.
 
-Blocked operations (v1.0):
+Blocked operations (v0.2.0):
 - git push --force / -f / +refspec
+- git push --mirror
 - git reset --hard
 - git branch -D
 - git stash drop / clear
 - git clean -f / -fd / -xfd
 - git checkout -- <path>
 - git restore <path> (worktree, not --staged)
+- git reflog expire --expire-unreachable=now
+- git gc --prune=now
+- git filter-branch (always blocked)
 """
 
 from __future__ import annotations
@@ -144,6 +148,22 @@ BLOCK_MESSAGES = {
         "BLOCKED: Force push destroys remote history.\n\n"
         "Safe alternative: git push --force-with-lease"
     ),
+    "push_mirror": (
+        "BLOCKED: git push --mirror overwrites entire remote.\n\n"
+        "Safe alternative: git push (regular push)"
+    ),
+    "reflog_expire": (
+        "BLOCKED: reflog expire --expire-unreachable=now destroys recovery history.\n\n"
+        "Safe alternative: Don't manually expire reflog; let Git handle it"
+    ),
+    "gc_prune": (
+        "BLOCKED: git gc --prune=now immediately deletes objects.\n\n"
+        "Safe alternative: git gc (default prune with grace period)"
+    ),
+    "filter_branch": (
+        "BLOCKED: git filter-branch rewrites history destructively.\n\n"
+        "Safe alternative: git filter-repo (external tool with safety checks)"
+    ),
     "reset_hard": (
         "BLOCKED: git reset --hard destroys uncommitted changes.\n\n"
         "Safe alternative: git stash (preserves changes)"
@@ -184,10 +204,15 @@ def analyze_push(args: list[str]) -> str | None:
     - git push --force
     - git push -f
     - git push +refspec
+    - git push --mirror
 
     Allows:
     - git push --force-with-lease
     """
+    # Block --mirror (overwrites entire remote)
+    if "--mirror" in args:
+        return BLOCK_MESSAGES["push_mirror"]
+
     # Allow --force-with-lease (safe)
     if has_force_with_lease(args):
         return None
@@ -354,6 +379,72 @@ def analyze_restore(args: list[str]) -> str | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Catastrophic Command Detection (v0.2.0)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def analyze_reflog(args: list[str]) -> str | None:
+    """Analyze git reflog for destructive patterns.
+
+    Blocks:
+    - git reflog expire --expire-unreachable=now
+    - git reflog expire --expire-unreachable now
+
+    Allows:
+    - git reflog (show)
+    - git reflog show
+    - git reflog expire (without =now)
+    """
+    if "expire" not in args:
+        return None
+
+    # Handle both --expire-unreachable=now and --expire-unreachable now
+    for i, token in enumerate(args):
+        if "--expire-unreachable=now" in token:
+            return BLOCK_MESSAGES["reflog_expire"]
+        if token == "--expire-unreachable":
+            if i + 1 < len(args) and args[i + 1] == "now":
+                return BLOCK_MESSAGES["reflog_expire"]
+
+    return None
+
+
+def analyze_gc(args: list[str]) -> str | None:
+    """Analyze git gc for destructive patterns.
+
+    Blocks:
+    - git gc --prune=now
+    - git gc --prune now
+
+    Allows:
+    - git gc (default prune with grace period)
+    - git gc --prune=2.weeks.ago
+    """
+    # Handle both --prune=now and --prune now
+    for i, token in enumerate(args):
+        if "--prune=now" in token:
+            return BLOCK_MESSAGES["gc_prune"]
+        if token == "--prune":
+            if i + 1 < len(args) and args[i + 1] == "now":
+                return BLOCK_MESSAGES["gc_prune"]
+
+    return None
+
+
+def analyze_filter_branch(args: list[str]) -> str | None:
+    """Analyze git filter-branch (always blocked).
+
+    git filter-branch is always destructive and has been
+    deprecated in favor of git filter-repo.
+
+    Blocks:
+    - git filter-branch (any invocation)
+    """
+    # filter-branch is always destructive
+    return BLOCK_MESSAGES["filter_branch"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main Analysis Entry Point
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -372,6 +463,15 @@ def analyze_git(tokens: list[str]) -> str | None:
     if not subcommand:
         return None
 
+    # Global DX bypass - check BEFORE any analyzer
+    # git help <anything> is always safe
+    if subcommand == "help":
+        return None
+
+    # --help, -h, --version flags make any command safe (just shows help)
+    if "--help" in args or "-h" in args or "--version" in args:
+        return None
+
     # Route to specific analyzers
     analyzers = {
         "push": analyze_push,
@@ -381,6 +481,10 @@ def analyze_git(tokens: list[str]) -> str | None:
         "clean": analyze_clean,
         "checkout": analyze_checkout,
         "restore": analyze_restore,
+        # Catastrophic commands (v0.2.0)
+        "reflog": analyze_reflog,
+        "gc": analyze_gc,
+        "filter-branch": analyze_filter_branch,
     }
 
     analyzer = analyzers.get(subcommand)

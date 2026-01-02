@@ -29,6 +29,10 @@ SUBCOMMAND_TO_RULE: dict[str, str] = {
     "clean": "block_clean",
     "checkout": "block_checkout_restore",
     "restore": "block_checkout_restore",
+    # Catastrophic commands (v0.2.0)
+    "reflog": "block_reflog_expire",
+    "gc": "block_gc_prune",
+    "filter-branch": "block_filter_branch",
 }
 
 
@@ -63,7 +67,7 @@ def analyze_command(
 
     # Load policy if not provided
     if policy is None:
-        policy = load_policy()
+        policy, _warning = load_policy()
 
     action = get_action(policy)
 

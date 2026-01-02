@@ -11,11 +11,14 @@ from scc_safety_impl.policy import (
     ALLOWED_COMMANDS,
     BLOCKED_COMMANDS,
     DEFAULT_POLICY,
+    MAX_POLICY_SIZE,
     _extract_safety_net,
     _get_policy_paths,
     _load_json,
+    _validate_policy_file,
     get_action,
     is_rule_enabled,
+    is_scc_managed,
     load_policy,
     render_status,
     render_status_json,
@@ -103,22 +106,25 @@ class TestLoadPolicy:
         original_cwd = os.getcwd()
         try:
             os.chdir(tmp_path)
-            policy = load_policy()
+            policy, warning = load_policy()
             assert policy["action"] == "block"
+            assert warning is None  # No warning for normal default
         finally:
             os.chdir(original_cwd)
 
     def test_env_var_priority(self, env_policy_path: Path, block_policy: dict[str, Any]) -> None:
         block_policy["action"] = "warn"  # Distinguish from default
         env_policy_path.write_text(json.dumps(block_policy))
-        policy = load_policy()
+        policy, warning = load_policy()
         assert policy["action"] == "warn"
+        assert warning is None
 
     def test_ensures_action_key(self, env_policy_path: Path) -> None:
         env_policy_path.write_text('{"block_force_push": true}')
-        policy = load_policy()
+        policy, warning = load_policy()
         assert "action" in policy
         assert policy["action"] == "block"
+        assert warning is None
 
 
 class TestGetAction:
@@ -212,3 +218,130 @@ class TestRenderStatusJson:
         parsed = json.loads(status)
         assert "blocked_commands" in parsed
         assert "allowed_commands" in parsed
+
+    def test_includes_new_rules(self) -> None:
+        status = render_status_json({"action": "block"})
+        parsed = json.loads(status)
+        # Check new v0.2.0 rules are present
+        assert "block_push_mirror" in parsed["rules"]
+        assert "block_reflog_expire" in parsed["rules"]
+        assert "block_filter_branch" in parsed["rules"]
+        assert "block_gc_prune" in parsed["rules"]
+
+
+class TestIsSccManaged:
+    """Tests for is_scc_managed function."""
+
+    def test_returns_false_when_not_set(self, clean_env: None) -> None:
+        assert is_scc_managed() is False
+
+    def test_returns_true_when_set(self, clean_env: None) -> None:
+        os.environ["SCC_MANAGED"] = "1"
+        try:
+            assert is_scc_managed() is True
+        finally:
+            del os.environ["SCC_MANAGED"]
+
+    def test_returns_false_for_other_values(self, clean_env: None) -> None:
+        os.environ["SCC_MANAGED"] = "true"
+        try:
+            assert is_scc_managed() is False
+        finally:
+            del os.environ["SCC_MANAGED"]
+
+
+class TestValidatePolicyFile:
+    """Tests for _validate_policy_file function."""
+
+    def test_valid_file(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "block"}')
+        os.chmod(policy_file, 0o644)  # -rw-r--r--
+        assert _validate_policy_file(policy_file) is None
+
+    def test_rejects_symlink(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "block"}')
+        link = tmp_path / "policy_link.json"
+        link.symlink_to(policy_file)
+        error = _validate_policy_file(link)
+        assert error is not None
+        assert "symlink" in error.lower()
+
+    def test_rejects_directory(self, tmp_path: Path) -> None:
+        error = _validate_policy_file(tmp_path)
+        assert error is not None
+        assert "not a regular file" in error.lower()
+
+    def test_rejects_world_writable(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "block"}')
+        os.chmod(policy_file, 0o646)  # -rw-r--rw-
+        error = _validate_policy_file(policy_file)
+        assert error is not None
+        assert "unsafe permissions" in error.lower()
+
+    def test_rejects_group_writable(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "block"}')
+        os.chmod(policy_file, 0o664)  # -rw-rw-r--
+        error = _validate_policy_file(policy_file)
+        assert error is not None
+        assert "unsafe permissions" in error.lower()
+
+    def test_rejects_too_large(self, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        # Create file larger than MAX_POLICY_SIZE
+        policy_file.write_text("x" * (MAX_POLICY_SIZE + 1))
+        os.chmod(policy_file, 0o644)
+        error = _validate_policy_file(policy_file)
+        assert error is not None
+        assert "too large" in error.lower()
+
+
+class TestSccManagedMode:
+    """Tests for SCC-managed mode behavior."""
+
+    def test_scc_managed_requires_policy_path(self, clean_env: None, tmp_path: Path) -> None:
+        os.environ["SCC_MANAGED"] = "1"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            policy, warning = load_policy()
+            assert policy["action"] == "block"  # Falls back to default
+            assert warning is not None
+            assert "SCC_POLICY_PATH not set" in warning
+        finally:
+            del os.environ["SCC_MANAGED"]
+            os.chdir(original_cwd)
+
+    def test_scc_managed_with_valid_policy(self, clean_env: None, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "warn"}')
+        os.chmod(policy_file, 0o644)
+
+        os.environ["SCC_MANAGED"] = "1"
+        os.environ["SCC_POLICY_PATH"] = str(policy_file)
+        try:
+            policy, warning = load_policy()
+            assert policy["action"] == "warn"
+            assert warning is None
+        finally:
+            del os.environ["SCC_MANAGED"]
+            del os.environ["SCC_POLICY_PATH"]
+
+    def test_scc_managed_rejects_invalid_policy(self, clean_env: None, tmp_path: Path) -> None:
+        policy_file = tmp_path / "policy.json"
+        policy_file.write_text('{"action": "warn"}')
+        os.chmod(policy_file, 0o666)  # World-writable
+
+        os.environ["SCC_MANAGED"] = "1"
+        os.environ["SCC_POLICY_PATH"] = str(policy_file)
+        try:
+            policy, warning = load_policy()
+            assert policy["action"] == "block"  # Falls back to default
+            assert warning is not None
+            assert "unsafe permissions" in warning.lower()
+        finally:
+            del os.environ["SCC_MANAGED"]
+            del os.environ["SCC_POLICY_PATH"]

@@ -6,8 +6,11 @@ from scc_safety_impl.git_rules import (
     analyze_branch,
     analyze_checkout,
     analyze_clean,
+    analyze_filter_branch,
+    analyze_gc,
     analyze_git,
     analyze_push,
+    analyze_reflog,
     analyze_reset,
     analyze_restore,
     analyze_stash,
@@ -146,6 +149,11 @@ class TestAnalyzePush:
     def test_combined_flags(self) -> None:
         assert analyze_push(["-fu"]) is not None
 
+    def test_mirror_blocked(self) -> None:
+        assert analyze_push(["--mirror"]) is not None
+        result = analyze_push(["--mirror"])
+        assert "mirror" in result.lower()
+
 
 class TestAnalyzeReset:
     """Tests for analyze_reset function."""
@@ -264,6 +272,74 @@ class TestAnalyzeRestore:
         assert analyze_restore(["-S", "-W", "file.py"]) is not None
 
 
+class TestAnalyzeReflog:
+    """Tests for analyze_reflog function."""
+
+    def test_reflog_show(self) -> None:
+        assert analyze_reflog([]) is None
+        assert analyze_reflog(["show"]) is None
+
+    def test_reflog_expire_safe(self) -> None:
+        # Expire without =now is allowed
+        assert analyze_reflog(["expire"]) is None
+        assert analyze_reflog(["expire", "--all"]) is None
+
+    def test_reflog_expire_unreachable_now_combined(self) -> None:
+        # Combined form: --expire-unreachable=now
+        assert analyze_reflog(["expire", "--expire-unreachable=now"]) is not None
+        assert analyze_reflog(["expire", "--all", "--expire-unreachable=now"]) is not None
+
+    def test_reflog_expire_unreachable_now_separate(self) -> None:
+        # Separate form: --expire-unreachable now
+        assert analyze_reflog(["expire", "--expire-unreachable", "now"]) is not None
+        assert analyze_reflog(["expire", "--expire-unreachable", "now", "--all"]) is not None
+
+    def test_reflog_expire_other_values(self) -> None:
+        # Other values for --expire-unreachable are allowed
+        assert analyze_reflog(["expire", "--expire-unreachable=2.weeks.ago"]) is None
+        assert analyze_reflog(["expire", "--expire-unreachable", "30.days.ago"]) is None
+
+
+class TestAnalyzeGc:
+    """Tests for analyze_gc function."""
+
+    def test_gc_default(self) -> None:
+        assert analyze_gc([]) is None
+
+    def test_gc_aggressive(self) -> None:
+        assert analyze_gc(["--aggressive"]) is None
+
+    def test_gc_prune_now_combined(self) -> None:
+        # Combined form: --prune=now
+        assert analyze_gc(["--prune=now"]) is not None
+        assert analyze_gc(["--aggressive", "--prune=now"]) is not None
+
+    def test_gc_prune_now_separate(self) -> None:
+        # Separate form: --prune now
+        assert analyze_gc(["--prune", "now"]) is not None
+        assert analyze_gc(["--prune", "now", "--aggressive"]) is not None
+
+    def test_gc_prune_other_values(self) -> None:
+        # Other values for --prune are allowed
+        assert analyze_gc(["--prune=2.weeks.ago"]) is None
+        assert analyze_gc(["--prune", "30.days.ago"]) is None
+
+
+class TestAnalyzeFilterBranch:
+    """Tests for analyze_filter_branch function."""
+
+    def test_filter_branch_always_blocked(self) -> None:
+        # filter-branch is always blocked
+        assert analyze_filter_branch([]) is not None
+        assert analyze_filter_branch(["--tree-filter", "rm -f passwords.txt"]) is not None
+        assert analyze_filter_branch(["--env-filter", "..."]) is not None
+
+    def test_filter_branch_message_content(self) -> None:
+        result = analyze_filter_branch([])
+        assert "filter-branch" in result.lower()
+        assert "filter-repo" in result.lower()
+
+
 class TestAnalyzeGit:
     """Integration tests for analyze_git function."""
 
@@ -328,3 +404,54 @@ class TestAnalyzeGit:
         assert analyze_git(["git", "status"]) is None
         assert analyze_git(["git", "log"]) is None
         assert analyze_git(["git", "diff"]) is None
+
+    # Catastrophic commands (v0.2.0)
+
+    def test_push_mirror(self) -> None:
+        assert analyze_git(["git", "push", "--mirror"]) is not None
+
+    def test_reflog_expire_now(self) -> None:
+        assert analyze_git(["git", "reflog", "expire", "--expire-unreachable=now"]) is not None
+        assert analyze_git(["git", "reflog", "expire", "--expire-unreachable", "now"]) is not None
+
+    def test_reflog_show_allowed(self) -> None:
+        assert analyze_git(["git", "reflog"]) is None
+        assert analyze_git(["git", "reflog", "show"]) is None
+
+    def test_gc_prune_now(self) -> None:
+        assert analyze_git(["git", "gc", "--prune=now"]) is not None
+        assert analyze_git(["git", "gc", "--prune", "now"]) is not None
+
+    def test_gc_allowed(self) -> None:
+        assert analyze_git(["git", "gc"]) is None
+        assert analyze_git(["git", "gc", "--aggressive"]) is None
+
+    def test_filter_branch_blocked(self) -> None:
+        assert analyze_git(["git", "filter-branch"]) is not None
+        assert analyze_git(["git", "filter-branch", "--tree-filter", "..."]) is not None
+
+    # DX polish (v0.2.0) - help/version bypass
+
+    def test_git_help_allowed(self) -> None:
+        # git help <subcommand> is always safe
+        assert analyze_git(["git", "help"]) is None
+        assert analyze_git(["git", "help", "push"]) is None
+        assert analyze_git(["git", "help", "reset"]) is None
+
+    def test_help_flag_bypasses_block(self) -> None:
+        # --help flag makes any command safe
+        assert analyze_git(["git", "push", "--force", "--help"]) is None
+        assert analyze_git(["git", "reset", "--hard", "--help"]) is None
+        assert analyze_git(["git", "clean", "-f", "--help"]) is None
+        assert analyze_git(["git", "filter-branch", "--help"]) is None
+
+    def test_h_flag_bypasses_block(self) -> None:
+        # -h flag makes any command safe
+        assert analyze_git(["git", "push", "-f", "-h"]) is None
+        assert analyze_git(["git", "reset", "--hard", "-h"]) is None
+        assert analyze_git(["git", "branch", "-D", "-h"]) is None
+
+    def test_version_flag_bypasses_block(self) -> None:
+        # --version flag makes any command safe
+        assert analyze_git(["git", "push", "--force", "--version"]) is None
+        assert analyze_git(["git", "gc", "--prune=now", "--version"]) is None
