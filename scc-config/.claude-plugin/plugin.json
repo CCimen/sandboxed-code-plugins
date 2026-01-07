@@ -1,0 +1,10 @@
+{
+  "name": "scc-config",
+  "version": "1.0.0",
+  "description": "Interactive configuration wizard for SCC organization, team, and project configs",
+  "author": {"name": "SCC Team"},
+  "repository": "https://github.com/CCimen/sandboxed-code-plugins",
+  "license": "MIT",
+  "keywords": ["scc", "config", "wizard", "organization", "team", "configuration"],
+  "hooks": "./hooks/hooks.json"
+}

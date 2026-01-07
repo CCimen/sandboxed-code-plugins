@@ -16,6 +16,16 @@
       "author": {
         "name": "SCC Team"
       }
+    },
+    {
+      "name": "scc-config",
+      "description": "Interactive configuration wizard for SCC organization, team, and project configs",
+      "source": "./scc-config",
+      "category": "configuration",
+      "version": "1.0.0",
+      "author": {
+        "name": "SCC Team"
+      }
     }
   ]
 }
