@@ -16,6 +16,16 @@
       "author": {
         "name": "SCC Team"
       }
+    },
+    {
+      "name": "scc-wizard",
+      "description": "Interactive wizard for creating, editing, and validating SCC organization and team configurations",
+      "source": "./scc-wizard",
+      "category": "configuration",
+      "version": "1.0.0",
+      "author": {
+        "name": "Cagri Cimen"
+      }
     }
   ]
 }

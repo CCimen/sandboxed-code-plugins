@@ -1,0 +1,85 @@
+{
+  "$schema": "https://scc-cli.dev/schemas/org-v1.json",
+  "schema_version": "1.0.0",
+  "organization": {
+    "name": "Example Org",
+    "id": "example-org",
+    "contact": "admin@example.com"
+  },
+  "marketplaces": {
+    "official-plugins": {
+      "source": "github",
+      "owner": "CCimen",
+      "repo": "sandboxed-code-plugins",
+      "branch": "main",
+      "path": "/"
+    }
+  },
+  "security": {
+    "blocked_plugins": ["*-experimental", "*-deprecated", "malicious-*"],
+    "blocked_mcp_servers": ["*.untrusted.com"],
+    "allow_stdio_mcp": false,
+    "safety_net": {
+      "action": "block"
+    }
+  },
+  "defaults": {
+    "enabled_plugins": ["scc-safety-net@official-plugins"],
+    "network_policy": "unrestricted",
+    "cache_ttl_hours": 24,
+    "session": {
+      "timeout_hours": 10,
+      "auto_resume": true
+    }
+  },
+  "delegation": {
+    "teams": {
+      "allow_additional_plugins": ["*"],
+      "allow_additional_mcp_servers": ["*"]
+    },
+    "projects": {
+      "inherit_team_delegation": true
+    }
+  },
+  "profiles": {
+    "team-alpha": {
+      "description": "Frontend team - maintains their own config",
+      "config_source": {
+        "source": "github",
+        "owner": "example-org",
+        "repo": "team-alpha-config",
+        "branch": "main",
+        "path": "scc/team-config.json"
+      },
+      "trust": {
+        "inherit_org_marketplaces": true,
+        "allow_additional_marketplaces": false,
+        "marketplace_source_patterns": []
+      },
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-beta": {
+      "description": "Backend team - high trust, can add marketplaces",
+      "config_source": {
+        "source": "github",
+        "owner": "example-org",
+        "repo": "team-beta-config",
+        "branch": "main",
+        "path": "scc/team-config.json"
+      },
+      "trust": {
+        "inherit_org_marketplaces": true,
+        "allow_additional_marketplaces": true,
+        "marketplace_source_patterns": [
+          "https://github.com/example-org/*",
+          "https://gitlab.example.com/*"
+        ]
+      },
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    }
+  }
+}

@@ -69,6 +69,7 @@ Or install via CLI:
 | Plugin | Description | Status |
 |--------|-------------|--------|
 | [scc-safety-net](./scc-safety-net/) | Blocks destructive git commands | Stable |
+| [scc-wizard](./scc-wizard/) | Interactive wizard for creating, editing, and validating SCC configs | Stable |
 
 > Version info: See each plugin's `.claude-plugin/plugin.json` for current version.
 

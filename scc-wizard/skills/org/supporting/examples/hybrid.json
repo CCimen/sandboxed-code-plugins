@@ -1,0 +1,117 @@
+{
+  "$schema": "https://scc-cli.dev/schemas/org-v1.json",
+  "schema_version": "1.0.0",
+  "organization": {
+    "name": "Example Org",
+    "id": "example-org",
+    "contact": "admin@example.com"
+  },
+  "marketplaces": {
+    "official-plugins": {
+      "source": "github",
+      "owner": "CCimen",
+      "repo": "sandboxed-code-plugins",
+      "branch": "main",
+      "path": "/"
+    },
+    "internal-plugins": {
+      "source": "git",
+      "url": "https://gitlab.example.com/scc/internal-plugins.git",
+      "branch": "main",
+      "path": "/"
+    }
+  },
+  "security": {
+    "blocked_plugins": ["*-experimental", "*-deprecated", "malicious-*"],
+    "blocked_mcp_servers": ["*.untrusted.com"],
+    "allow_stdio_mcp": true,
+    "allowed_stdio_prefixes": ["/usr/local/bin", "/opt/tools"],
+    "safety_net": {
+      "action": "block"
+    }
+  },
+  "defaults": {
+    "enabled_plugins": [
+      "scc-safety-net@official-plugins",
+      "company-standards@internal-plugins"
+    ],
+    "network_policy": "unrestricted",
+    "cache_ttl_hours": 12,
+    "session": {
+      "timeout_hours": 10,
+      "auto_resume": true
+    }
+  },
+  "delegation": {
+    "teams": {
+      "allow_additional_plugins": ["*"],
+      "allow_additional_mcp_servers": ["team-platform", "team-infra"]
+    },
+    "projects": {
+      "inherit_team_delegation": true
+    }
+  },
+  "profiles": {
+    "team-frontend": {
+      "description": "Frontend team (centralized - org manages plugins)",
+      "additional_plugins": [
+        "ui-components@official-plugins",
+        "accessibility-checker@official-plugins"
+      ],
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-backend": {
+      "description": "Backend team (centralized - org manages plugins)",
+      "additional_plugins": [
+        "api-docs@official-plugins",
+        "db-migration@internal-plugins"
+      ],
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-platform": {
+      "description": "Platform team (federated - maintains own config, can add MCP)",
+      "config_source": {
+        "source": "github",
+        "owner": "example-org",
+        "repo": "platform-team-config",
+        "branch": "main",
+        "path": "scc/team-config.json"
+      },
+      "trust": {
+        "inherit_org_marketplaces": true,
+        "allow_additional_marketplaces": true,
+        "marketplace_source_patterns": ["https://github.com/example-org/*"]
+      },
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-infra": {
+      "description": "Infrastructure team (federated - high trust, stdio MCP allowed)",
+      "config_source": {
+        "source": "url",
+        "url": "https://config.example.com/teams/infra/team-config.json",
+        "headers": {
+          "Authorization": "Bearer ${INFRA_CONFIG_TOKEN}"
+        }
+      },
+      "trust": {
+        "inherit_org_marketplaces": true,
+        "allow_additional_marketplaces": true,
+        "marketplace_source_patterns": ["https://*.example.com/*"]
+      },
+      "delegation": {
+        "allow_project_overrides": false
+      }
+    }
+  },
+  "stats": {
+    "enabled": true,
+    "user_identity_mode": "hash",
+    "retention_days": 90
+  }
+}

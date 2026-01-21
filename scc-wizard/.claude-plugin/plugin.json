@@ -1,0 +1,9 @@
+{
+  "name": "scc-wizard",
+  "version": "1.0.0",
+  "description": "Interactive wizard for creating, editing, validating, and explaining SCC organization and team configurations",
+  "author": { "name": "Cagri Cimen" },
+  "repository": "https://github.com/CCimen/sandboxed-code-plugins",
+  "license": "MIT",
+  "keywords": ["scc", "config", "organization", "team", "wizard", "validation", "governance"]
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://scc-cli.dev/schemas/org-v1.json",
+  "schema_version": "1.0.0",
+  "organization": {
+    "name": "Example Org",
+    "id": "example-org",
+    "contact": "admin@example.com"
+  },
+  "marketplaces": {
+    "official-plugins": {
+      "source": "github",
+      "owner": "CCimen",
+      "repo": "sandboxed-code-plugins",
+      "branch": "main",
+      "path": "/"
+    }
+  },
+  "security": {
+    "blocked_plugins": ["*-experimental", "*-deprecated", "malicious-*"],
+    "blocked_mcp_servers": ["*.untrusted.com"],
+    "allow_stdio_mcp": false,
+    "safety_net": {
+      "action": "block",
+      "block_force_push": true,
+      "block_reset_hard": true,
+      "block_branch_force_delete": true,
+      "block_checkout_restore": true,
+      "block_clean": true,
+      "block_stash_destructive": true
+    }
+  },
+  "defaults": {
+    "enabled_plugins": ["scc-safety-net@official-plugins"],
+    "network_policy": "unrestricted",
+    "cache_ttl_hours": 24,
+    "session": {
+      "timeout_hours": 10,
+      "auto_resume": true
+    }
+  },
+  "delegation": {
+    "teams": {
+      "allow_additional_plugins": ["*"],
+      "allow_additional_mcp_servers": []
+    },
+    "projects": {
+      "inherit_team_delegation": true
+    }
+  },
+  "profiles": {
+    "team-alpha": {
+      "description": "Frontend development team",
+      "additional_plugins": ["changelog-generator@official-plugins"],
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-beta": {
+      "description": "Backend development team",
+      "additional_plugins": [
+        "code-review@official-plugins",
+        "test-helper@official-plugins"
+      ],
+      "delegation": {
+        "allow_project_overrides": true
+      }
+    },
+    "team-gamma": {
+      "description": "DevOps team",
+      "additional_plugins": ["deployment-helper@official-plugins"],
+      "network_policy": "corp-proxy-only",
+      "delegation": {
+        "allow_project_overrides": false
+      }
+    }
+  }
+}
