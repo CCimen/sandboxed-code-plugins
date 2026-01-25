@@ -1,6 +1,6 @@
 ---
 name: validate
-description: Validates SCC org/team configs (schema + invariant + advisory checks). Guides running SCC CLI validation.
+description: Validates SCC org/team configs (schema + basic semantic checks). Guides running SCC CLI validation and adds advisory warnings.
 argument-hint: [path-to-json]
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
@@ -8,17 +8,18 @@ allowed-tools: Read, Grep, Glob, Bash, AskUserQuestion
 
 # SCC Config Validate
 
-Validate SCC organization and team configuration files with the same rigor as SCC's own validation pipeline.
+Validate SCC organization and team configuration files using SCC CLI when available. If the CLI
+isn't available, perform schema validation and basic semantic checks, then surface advisory warnings.
 
-## Validation Pipeline (Mirrors SCC)
+## Validation Pipeline (CLI-first)
 
-SCC uses a strict two-step validation gate:
+SCC CLI currently enforces:
 
 1. **Schema validation** - JSON Schema compliance
-2. **Invariant validation** - Semantic rules and cross-field consistency
-3. **Version compatibility** - schema_version and min_cli_version checks
+2. **Basic semantic check** - `organization.default_profile` references an existing team (org configs)
 
-This skill follows the same pipeline and adds advisory warnings for governance best practices.
+This skill mirrors CLI when available and can surface **advisory** warnings (allowlists,
+delegation, stdio MCP, version hints) that are not enforced by the CLI unless explicitly implemented.
 
 ## Flow
 
@@ -54,7 +55,7 @@ which scc
 scc org validate <path>
 
 # For team configs
-scc team validate <path>
+scc team validate --file <path>
 ```
 
 The CLI provides the most accurate validation. Report its output directly.
@@ -63,7 +64,7 @@ The CLI provides the most accurate validation. Report its output directly.
 
 Perform manual validation checks grouped by category:
 
-## Error Categories
+## Error Categories (CLI-enforced)
 
 ### 1. Schema Errors (Hard Errors)
 
@@ -88,9 +89,9 @@ SCHEMA ERROR: <what's wrong>
   Fix: <minimal correction>
 ```
 
-### 2. Version Compatibility Errors (Hard Errors)
+### 2. Version Compatibility Warnings (Advisory)
 
-Version requirements that prevent the config from loading.
+Helpful compatibility hints. `scc org validate` does not currently enforce these.
 
 **Check:**
 - `schema_version` must be `"1.0.0"` (current version)
@@ -98,14 +99,14 @@ Version requirements that prevent the config from loading.
 
 **Report format:**
 ```
-VERSION ERROR: min_cli_version requires SCC >= <version>
+WARNING: min_cli_version requires SCC >= <version>
   Your SCC version: <installed or unknown>
   Fix: Upgrade SCC or lower min_cli_version
 ```
 
-### 3. Invariant Errors (Hard Errors)
+### 3. Invariant Warnings (Advisory)
 
-Semantic rules enforced by SCC's invariant validator. **These block config loading.**
+Semantic checks that help catch runtime denials. These are **not** enforced by `scc org validate`.
 
 **For org configs, check:**
 
@@ -119,7 +120,7 @@ Semantic rules enforced by SCC's invariant validator. **These block config loadi
 
 **Report format:**
 ```
-INVARIANT ERROR: <invariant name>
+WARNING: <invariant name>
   Path: <JSON path>
   Issue: <description>
   Fix: <how to resolve>
@@ -132,9 +133,9 @@ INVARIANT ERROR: <invariant name>
 
 Same logic for `allowed_mcp_servers`.
 
-### 4. stdio MCP Errors (Hard Errors)
+### 4. stdio MCP Warnings (Advisory)
 
-stdio MCP servers have strict security gates.
+stdio MCP servers have strict security gates at runtime, but `scc org validate` does not block on these.
 
 **Check:**
 - If any team has stdio MCP servers AND `security.allow_stdio_mcp` is `false` or missing → **error**
@@ -143,14 +144,14 @@ stdio MCP servers have strict security gates.
 
 **Report format:**
 ```
-STDIO MCP ERROR: <issue>
+WARNING: STDIO MCP <issue>
   Team: <team name>
   Server: <MCP server name>
   Command: <command value>
   Fix: <correction>
 ```
 
-## Advisory Warnings (Do Not Block)
+## Advisory Warnings (Wizard-only)
 
 These are governance best practices that don't prevent the config from loading but may cause confusion or runtime denials.
 
@@ -186,9 +187,9 @@ Group and present issues by severity:
 
 Config type: <Org config | Team config>
 
-### Hard Errors (must fix)
+### Errors (CLI-enforced)
 
-<list schema, version, and invariant errors>
+<list schema and default_profile errors>
 
 ### Warnings (advisory)
 
@@ -201,7 +202,9 @@ Config type: <Org config | Team config>
 - Status: <VALID | INVALID>
 ```
 
-If there are hard errors, config will **fail** `scc org/team validate`.
+If there are schema or default_profile errors, config will **fail** `scc org validate`
+or `scc team validate --file`.
+Advisory warnings may still pass CLI validation.
 
 ## Error Resolution Guidance
 
@@ -229,8 +232,8 @@ Fix: Either:
 | Scenario | Result |
 |----------|--------|
 | Schema violation | Hard error, blocks loading |
-| Invariant violation | Hard error, blocks loading |
+| Invariant violation | Advisory warning (wizard); runtime denial |
 | Delegation mismatch | **No error** - runtime denial |
 | Plugin blocked by security | Runtime block (not validation error) |
-| Allowlist mismatch in profile | **Hard error** (invariant) |
+| Allowlist mismatch in profile | Advisory warning; runtime denial |
 | Allowlist mismatch at runtime | Runtime denial |

@@ -7,7 +7,7 @@
     "contact": "admin@example.com"
   },
   "marketplaces": {
-    "official-plugins": {
+    "sandboxed-code-official": {
       "source": "github",
       "owner": "CCimen",
       "repo": "sandboxed-code-plugins",
@@ -30,7 +30,7 @@
     }
   },
   "defaults": {
-    "enabled_plugins": ["scc-safety-net@official-plugins"],
+    "enabled_plugins": ["scc-safety-net@sandboxed-code-official"],
     "network_policy": "unrestricted",
     "cache_ttl_hours": 24,
     "session": {
@@ -50,7 +50,7 @@
   "profiles": {
     "team-alpha": {
       "description": "Frontend development team",
-      "additional_plugins": ["changelog-generator@official-plugins"],
+      "additional_plugins": ["changelog-generator@sandboxed-code-official"],
       "delegation": {
         "allow_project_overrides": true
       }
@@ -58,8 +58,8 @@
     "team-beta": {
       "description": "Backend development team",
       "additional_plugins": [
-        "code-review@official-plugins",
-        "test-helper@official-plugins"
+        "code-review@sandboxed-code-official",
+        "test-helper@sandboxed-code-official"
       ],
       "delegation": {
         "allow_project_overrides": true
@@ -67,7 +67,7 @@
     },
     "team-gamma": {
       "description": "DevOps team",
-      "additional_plugins": ["deployment-helper@official-plugins"],
+      "additional_plugins": ["deployment-helper@sandboxed-code-official"],
       "network_policy": "corp-proxy-only",
       "delegation": {
         "allow_project_overrides": false

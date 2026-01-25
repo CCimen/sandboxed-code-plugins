@@ -12,6 +12,8 @@ The hook contract uses exit code 2 + stderr for blocking:
 
 from __future__ import annotations
 
+from typing import Any
+
 from .git_rules import analyze_git
 from .policy import get_action, is_rule_enabled, load_policy
 from .shell import extract_all_commands
@@ -45,7 +47,7 @@ def analyze_command(
     command: str,
     *,
     cwd: str | None = None,
-    policy: dict | None = None,
+    policy: dict[str, Any] | None = None,
 ) -> str | None:
     """Analyze a command string for destructive git operations.
 

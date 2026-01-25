@@ -315,7 +315,7 @@ def get_action(policy: dict[str, Any]) -> str:
     Returns:
         Action string: 'block', 'warn', or 'allow'
     """
-    action = policy.get("action", "block")
+    action = str(policy.get("action", "block"))
     if action in ("block", "warn", "allow"):
         return action
     return "block"  # Invalid action defaults to block
@@ -331,7 +331,7 @@ def is_rule_enabled(policy: dict[str, Any], rule: str) -> bool:
     Returns:
         True if rule is enabled, defaults to True for safety
     """
-    return policy.get(rule, True)
+    return bool(policy.get(rule, True))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

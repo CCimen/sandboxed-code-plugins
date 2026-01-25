@@ -18,7 +18,7 @@ Internal planning and verification notes. Not used at runtime.
 2. Select "Create new org config (Quickstart — recommended)" from combined menu
 3. Enter org name (e.g., "Sundsvalls kommun")
 4. Verify auto-generated org_id shown
-5. Get valid org-config.json with official-plugins + safety-net
+5. Get valid org-config.json with sandboxed-code-official + safety-net
 6. **Must complete with exactly 2 inputs (task selection + org identity)**
 
 ### Guided Setup Test
@@ -51,8 +51,8 @@ Generated Quickstart baseline must include ONLY:
 - `schema_version: "1.0.0"`
 - `$schema: "https://scc-cli.dev/schemas/org-v1.json"`
 - `organization.name` and `organization.id`
-- `marketplaces.official-plugins` with correct GitHub source
-- `defaults.enabled_plugins: ["scc-safety-net@official-plugins"]`
+- `marketplaces.sandboxed-code-official` with correct GitHub source
+- `defaults.enabled_plugins: ["scc-safety-net@sandboxed-code-official"]`
 - `security.safety_net: { "action": "block" }`
 
 **Must NOT include in Quickstart baseline:**

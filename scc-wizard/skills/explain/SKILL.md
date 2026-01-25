@@ -198,7 +198,7 @@ Always provide ready-to-use JSON snippets for fixes. Examples:
 // Add to defaults.allowed_plugins
 {
   "defaults": {
-    "allowed_plugins": ["*@official-plugins", "core-*"]
+    "allowed_plugins": ["*@sandboxed-code-official", "core-*"]
   }
 }
 ```

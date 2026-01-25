@@ -7,7 +7,7 @@
     "contact": "admin@example.com"
   },
   "marketplaces": {
-    "official-plugins": {
+    "sandboxed-code-official": {
       "source": "github",
       "owner": "CCimen",
       "repo": "sandboxed-code-plugins",
@@ -32,7 +32,7 @@
   },
   "defaults": {
     "enabled_plugins": [
-      "scc-safety-net@official-plugins",
+      "scc-safety-net@sandboxed-code-official",
       "company-standards@internal-plugins"
     ],
     "network_policy": "unrestricted",
@@ -55,8 +55,8 @@
     "team-frontend": {
       "description": "Frontend team (centralized - org manages plugins)",
       "additional_plugins": [
-        "ui-components@official-plugins",
-        "accessibility-checker@official-plugins"
+        "ui-components@sandboxed-code-official",
+        "accessibility-checker@sandboxed-code-official"
       ],
       "delegation": {
         "allow_project_overrides": true
@@ -65,7 +65,7 @@
     "team-backend": {
       "description": "Backend team (centralized - org manages plugins)",
       "additional_plugins": [
-        "api-docs@official-plugins",
+        "api-docs@sandboxed-code-official",
         "db-migration@internal-plugins"
       ],
       "delegation": {

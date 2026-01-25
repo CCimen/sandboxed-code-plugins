@@ -108,8 +108,8 @@ Collect plugin references that this team wants to enable.
 Example:
 ```json
 "enabled_plugins": [
-  "changelog-generator@official-plugins",
-  "code-review@official-plugins"
+  "changelog-generator@sandboxed-code-official",
+  "code-review@sandboxed-code-official"
 ]
 ```
 

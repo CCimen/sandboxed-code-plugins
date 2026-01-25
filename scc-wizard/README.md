@@ -20,7 +20,7 @@ Add to your org config's `defaults.enabled_plugins`:
 ```json
 {
   "marketplaces": {
-    "official-plugins": {
+    "sandboxed-code-official": {
       "source": "github",
       "owner": "CCimen",
       "repo": "sandboxed-code-plugins"
@@ -28,7 +28,7 @@ Add to your org config's `defaults.enabled_plugins`:
   },
   "defaults": {
     "enabled_plugins": [
-      "scc-wizard@official-plugins"
+      "scc-wizard@sandboxed-code-official"
     ]
   }
 }
@@ -97,10 +97,12 @@ Only needed for **team-managed** teams (those with `config_source` in org config
 /scc-wizard:validate path/to/org-config.json
 ```
 
-Runs the same validation pipeline as `scc org validate`:
+Uses `scc org validate` (or `scc team validate --file`) when available:
 - Schema validation
-- Invariant checks
-- Delegation warnings
+- Basic semantic checks (org default_profile)
+
+The wizard can also surface **advisory** warnings (delegation/allowlists/stdio MCP),
+which are not enforced by the CLI unless explicitly implemented.
 
 ### Explain Config Behavior
 
