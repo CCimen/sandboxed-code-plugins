@@ -126,7 +126,7 @@ Generate the baseline config immediately after collecting org identity.
     "id": "org-id"
   },
   "marketplaces": {
-    "official-plugins": {
+    "sandboxed-code-official": {
       "source": "github",
       "owner": "CCimen",
       "repo": "sandboxed-code-plugins",
@@ -135,7 +135,7 @@ Generate the baseline config immediately after collecting org identity.
     }
   },
   "defaults": {
-    "enabled_plugins": ["scc-safety-net@official-plugins"]
+    "enabled_plugins": ["scc-safety-net@sandboxed-code-official"]
   },
   "security": {
     "safety_net": { "action": "block" }
@@ -149,8 +149,8 @@ Generate the baseline config immediately after collecting org identity.
 |-----------|-------|-----------|
 | `$schema` | `https://scc-cli.dev/schemas/org-v1.json` | Enables validation |
 | `schema_version` | `1.0.0` | Required |
-| `marketplaces.official-plugins` | GitHub: CCimen/sandboxed-code-plugins | Safe default marketplace |
-| `defaults.enabled_plugins` | `["scc-safety-net@official-plugins"]` | Safety net enabled |
+| `marketplaces.sandboxed-code-official` | GitHub: CCimen/sandboxed-code-plugins | Safe default marketplace |
+| `defaults.enabled_plugins` | `["scc-safety-net@sandboxed-code-official"]` | Safety net enabled |
 | `security.safety_net` | `{ "action": "block" }` | Core safety feature |
 
 ### What the Baseline Does NOT Include (Add via Guided/Advanced)
@@ -174,7 +174,7 @@ Generate the baseline config immediately after collecting org identity.
 
 What you get right now:
 • Org: {org.name} ({org.id})
-• Marketplace: official-plugins
+• Marketplace: sandboxed-code-official
 • Safety: scc-safety-net enabled (blocks dangerous actions)
 • Teams: not configured yet (everyone uses org defaults)
 
@@ -334,7 +334,7 @@ For team '{team}':
 "profiles": {
   "platform": {
     "description": "Platform engineering team",
-    "additional_plugins": ["terraform@official-plugins"]
+    "additional_plugins": ["terraform@sandboxed-code-official"]
   },
   "backend": {
     "description": "Backend services team"

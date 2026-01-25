@@ -152,6 +152,7 @@ class TestAnalyzePush:
     def test_mirror_blocked(self) -> None:
         assert analyze_push(["--mirror"]) is not None
         result = analyze_push(["--mirror"])
+        assert result is not None
         assert "mirror" in result.lower()
 
 
@@ -336,6 +337,7 @@ class TestAnalyzeFilterBranch:
 
     def test_filter_branch_message_content(self) -> None:
         result = analyze_filter_branch([])
+        assert result is not None
         assert "filter-branch" in result.lower()
         assert "filter-repo" in result.lower()
 

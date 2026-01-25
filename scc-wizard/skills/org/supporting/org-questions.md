@@ -134,7 +134,7 @@ Or type "later" to use placeholder paths.
 
 **Technical mapping:**
 - Open → **omit** `defaults.allowed_plugins` field
-- Allowlist → set patterns like `["core-*", "*@official-plugins"]`
+- Allowlist → set patterns like `["core-*", "*@sandboxed-code-official"]`
 - Block all → set `defaults.allowed_plugins = []`
 
 ---

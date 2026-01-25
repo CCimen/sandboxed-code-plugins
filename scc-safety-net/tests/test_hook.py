@@ -201,7 +201,7 @@ class TestEndToEnd:
     def test_full_hook_flow_block(self) -> None:
         """Simulate full PreToolUse hook flow for blocked command."""
         # Simulated JSON input
-        hook_input = {
+        hook_input: dict[str, Any] = {
             "tool_name": "Bash",
             "tool_input": {"command": "git push --force origin main"},
             "cwd": "/workspace/project",
@@ -216,7 +216,7 @@ class TestEndToEnd:
 
     def test_full_hook_flow_allow(self) -> None:
         """Simulate full PreToolUse hook flow for allowed command."""
-        hook_input = {
+        hook_input: dict[str, Any] = {
             "tool_name": "Bash",
             "tool_input": {"command": "git push origin main"},
             "cwd": "/workspace/project",
@@ -230,7 +230,7 @@ class TestEndToEnd:
 
     def test_non_bash_tool_ignored(self) -> None:
         """Non-Bash tools should be ignored."""
-        hook_input = {
+        hook_input: dict[str, Any] = {
             "tool_name": "Write",
             "tool_input": {"path": "/file.txt", "content": "data"},
         }

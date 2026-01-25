@@ -2,9 +2,9 @@
   "$schema": "https://scc-cli.dev/schemas/team-config.v1.json",
   "schema_version": "1.0.0",
   "enabled_plugins": [
-    "changelog-generator@official-plugins",
-    "code-review@official-plugins",
-    "test-helper@official-plugins"
+    "changelog-generator@sandboxed-code-official",
+    "code-review@sandboxed-code-official",
+    "test-helper@sandboxed-code-official"
   ],
   "disabled_plugins": [
     "legacy-tool@*"

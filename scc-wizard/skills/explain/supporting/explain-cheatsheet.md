@@ -117,7 +117,7 @@ Can project add plugins?
 // Allowlist mode
 {
   "defaults": {
-    "allowed_plugins": ["core-*", "*@official-plugins"]
+    "allowed_plugins": ["core-*", "*@sandboxed-code-official"]
   }
 }
 ```

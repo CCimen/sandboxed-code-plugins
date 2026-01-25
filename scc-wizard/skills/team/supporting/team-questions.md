@@ -19,7 +19,7 @@ Reference questions for the `/scc-wizard:team` skill.
 **Question:** "Which org marketplaces are available to your team?"
 **Hint:** List the marketplace names from your org config's `marketplaces` section.
 
-**Example response:** "official-plugins, internal-gitlab"
+**Example response:** "sandboxed-code-official, internal-gitlab"
 
 ## Marketplace Trust
 
@@ -36,8 +36,8 @@ Reference questions for the `/scc-wizard:team` skill.
 
 **Example:**
 ```
-changelog-generator@official-plugins
-code-review@official-plugins
+changelog-generator@sandboxed-code-official
+code-review@sandboxed-code-official
 custom-tool@internal-gitlab
 ```
 

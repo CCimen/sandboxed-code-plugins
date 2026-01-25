@@ -150,15 +150,15 @@ class TestIsRuleEnabled:
     """Tests for is_rule_enabled function."""
 
     def test_enabled_rule(self) -> None:
-        policy = {"block_force_push": True}
+        policy: dict[str, bool] = {"block_force_push": True}
         assert is_rule_enabled(policy, "block_force_push") is True
 
     def test_disabled_rule(self) -> None:
-        policy = {"block_force_push": False}
+        policy: dict[str, bool] = {"block_force_push": False}
         assert is_rule_enabled(policy, "block_force_push") is False
 
     def test_missing_rule_defaults_true(self) -> None:
-        policy = {}
+        policy: dict[str, bool] = {}
         assert is_rule_enabled(policy, "block_force_push") is True
 
 

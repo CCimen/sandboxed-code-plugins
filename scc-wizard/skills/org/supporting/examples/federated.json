@@ -7,7 +7,7 @@
     "contact": "admin@example.com"
   },
   "marketplaces": {
-    "official-plugins": {
+    "sandboxed-code-official": {
       "source": "github",
       "owner": "CCimen",
       "repo": "sandboxed-code-plugins",
@@ -24,7 +24,7 @@
     }
   },
   "defaults": {
-    "enabled_plugins": ["scc-safety-net@official-plugins"],
+    "enabled_plugins": ["scc-safety-net@sandboxed-code-official"],
     "network_policy": "unrestricted",
     "cache_ttl_hours": 24,
     "session": {
